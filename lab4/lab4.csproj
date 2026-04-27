@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\lab.shared\lab.shared.csproj" />
-    <ProjectReference Include="..\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="..\testrunner\testrunner.csproj" />
     <ProjectReference Include="..\project\project.csproj" />
     <ProjectReference Include="..\project.tests\project.tests.csproj" />
   </ItemGroup>

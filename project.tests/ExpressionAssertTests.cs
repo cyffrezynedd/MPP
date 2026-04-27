@@ -1,4 +1,4 @@
-using TestingFramework;
+using TestRunner;
 
 namespace project.tests
 {

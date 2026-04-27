@@ -1,6 +1,6 @@
 using System;
 
-namespace TestingFramework
+namespace TestRunner
 {
     public enum TestStatus
     {

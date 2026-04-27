@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Lab.Shared;
-using TestingFramework;
-using TestingFramework.Threading;
+using TestRunner;
+using TestRunner.Threading;
 
 namespace lab3
 {

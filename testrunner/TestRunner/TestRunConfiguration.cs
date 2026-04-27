@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using TestingFramework.Threading;
+using TestRunner.Threading;
 
-namespace TestingFramework
+namespace TestRunner
 {
     public sealed class TestRunConfiguration
     {

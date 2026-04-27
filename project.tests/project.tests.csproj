@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\project\project.csproj" />
-    <ProjectReference Include="..\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="..\testrunner\testrunner.csproj" />
   </ItemGroup>
 
 </Project>

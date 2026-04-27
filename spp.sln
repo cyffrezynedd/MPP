@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lab3", "lab3\lab3.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lab4", "lab4\lab4.csproj", "{9C5FA044-AE77-4F5D-B244-3A4B5C6D7E8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFramework", "TestFramework\TestFramework.csproj", "{0C8E2A1C-1655-49BB-9AF1-8B731ABF6C55}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testrunner", "testrunner\testrunner.csproj", "{0C8E2A1C-1655-49BB-9AF1-8B731ABF6C55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "project", "project\project.csproj", "{08896B90-76CD-47D0-86F7-28E5B038818E}"
 EndProject

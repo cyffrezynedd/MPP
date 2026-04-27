@@ -8,9 +8,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using TestingFramework.Threading;
+using TestRunner.Threading;
 
-namespace TestingFramework
+namespace TestRunner
 {
     public class TestRunnerEngine
     {
@@ -40,7 +40,7 @@ namespace TestingFramework
 
                 object? sharedContext = CreateSharedContextIfNeeded(testClass);
                 var shell = Activator.CreateInstance(testClass)
-                            ?? throw new TestFrameworkException($"Cannot create instance of {testClass.Name}.");
+                            ?? throw new TestRunnerException($"Cannot create instance of {testClass.Name}.");
 
                 InjectSharedContext(shell, sharedContext);
 
@@ -115,10 +115,10 @@ namespace TestingFramework
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 
             if (sourceMethod == null)
-                throw new TestFrameworkException($"TestCaseSource '{sourceAttr.MethodName}' not found on {testClass.Name}.");
+                throw new TestRunnerException($"TestCaseSource '{sourceAttr.MethodName}' not found on {testClass.Name}.");
 
             var enumerable = sourceMethod.Invoke(null, null) as IEnumerable
-                ?? throw new TestFrameworkException($"TestCaseSource '{sourceAttr.MethodName}' returned null.");
+                ?? throw new TestRunnerException($"TestCaseSource '{sourceAttr.MethodName}' returned null.");
 
             var i = 0;
             foreach (var item in enumerable)
@@ -242,7 +242,7 @@ namespace TestingFramework
             try
             {
                 var instance = Activator.CreateInstance(desc.TestClass)
-                               ?? throw new TestFrameworkException($"Cannot create {desc.TestClass.Name}.");
+                               ?? throw new TestRunnerException($"Cannot create {desc.TestClass.Name}.");
 
                 InjectSharedContext(instance, sharedContext);
 
@@ -362,7 +362,7 @@ namespace TestingFramework
 
             if (idx != ps.Length)
             {
-                throw new TestFrameworkException(
+                throw new TestRunnerException(
                     $"Bad parameter layout for {method.DeclaringType?.Name}.{method.Name}: " +
                     $"expected {ps.Length} parameters, resolved {idx}.");
             }
@@ -390,7 +390,7 @@ namespace TestingFramework
             if (parameters.Length == 0)
                 return Array.Empty<object>();
 
-            throw new TestFrameworkException(
+            throw new TestRunnerException(
                 $"Method {method.DeclaringType?.Name}.{method.Name} has unsupported parameters for lifecycle hook.");
         }
 

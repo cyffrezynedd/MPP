@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace TestingFramework.Threading
+namespace TestRunner.Threading
 {
     public sealed class DynamicThreadPool : IDisposable
     {

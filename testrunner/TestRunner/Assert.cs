@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace TestingFramework
+namespace TestRunner
 {
     public static class Assert
     {

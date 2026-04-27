@@ -1,6 +1,6 @@
 using System;
 
-namespace TestingFramework.Threading
+namespace TestRunner.Threading
 {
     public sealed class ThreadPoolThreadEventArgs : EventArgs
     {

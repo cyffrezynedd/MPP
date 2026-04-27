@@ -1,6 +1,6 @@
 using System;
 
-namespace TestingFramework
+namespace TestRunner
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class TestClassAttribute : Attribute

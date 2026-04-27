@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using TestingFramework;
+using TestRunner;
 
 namespace project.tests
 {

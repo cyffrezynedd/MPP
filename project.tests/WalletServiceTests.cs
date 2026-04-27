@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using project.api;
 using project.usecase;
-using TestingFramework;
+using TestRunner;
 
 namespace project.tests
 {

@@ -1,6 +1,6 @@
 using System;
 
-namespace TestingFramework
+namespace TestRunner
 {
     public class TestFailedException : Exception
     {
@@ -12,8 +12,8 @@ namespace TestingFramework
         public AssertionFailedException(string message) : base(message) { }
     }
 
-    public class TestFrameworkException : Exception
+    public class TestRunnerException : Exception
     {
-        public TestFrameworkException(string message) : base(message) { }
+        public TestRunnerException(string message) : base(message) { }
     }
 }

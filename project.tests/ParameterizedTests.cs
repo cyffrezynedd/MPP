@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using TestingFramework;
+using TestRunner;
 
 namespace project.tests
 {

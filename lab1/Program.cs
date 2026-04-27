@@ -1,6 +1,6 @@
 using System.IO;
 using Lab.Shared;
-using TestingFramework;
+using TestRunner;
 
 namespace lab1
 {

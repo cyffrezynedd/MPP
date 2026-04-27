@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace TestingFramework
+namespace TestRunner
 {
     public sealed class TestDescriptor
     {

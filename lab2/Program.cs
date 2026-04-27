@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Lab.Shared;
-using TestingFramework;
+using TestRunner;
 
 namespace lab2
 {
