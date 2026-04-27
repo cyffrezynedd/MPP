@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+.idea/
+lab2-results.txt
+
+# Конспекты по лабам — только локально (папка docs не в git)
+docs/
