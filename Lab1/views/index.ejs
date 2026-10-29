@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Управление задачами</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f7f9fa;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+    .form-group {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    input[type="text"], input[type="date"], select, input[type="file"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      background-color: #0066cc;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #0052a3;
+    }
+    .btn-create {
+      padding: 10px 18px;
+    }
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e1e4e8;
+      padding: 12px 0;
+    }
+    .task-item:last-child {
+      border-bottom: none;
+    }
+    .task-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .task-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .task-title.completed {
+      text-decoration: line-through;
+      color: #888;
+    }
+    .task-meta {
+      font-size: 13px;
+      color: #666;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .status-pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    .status-completed {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-toggle {
+      background-color: #28a745;
+    }
+    .btn-toggle:hover {
+      background-color: #218838;
+    }
+    .btn-delete {
+      background-color: #dc3545;
+    }
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: #0066cc;
+      text-decoration: none;
+      margin-top: 2px;
+    }
+    .file-link:hover {
+      text-decoration: underline;
+    }
+
+    .icon {
+      width: 15px;
+      height: 15px;
+      stroke-width: 2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Трекер задач</h1>
+  <div class="card">
+    <h2>Создать новую задачу</h2>
+    <form action="/tasks/create" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="title">Название задачи:</label>
+        <input type="text" id="title" name="title" required placeholder="Например: задача такая-то">
+      </div>
+
+      <div class="form-group">
+        <label for="dueDate">Ожидаемая дата завершения:</label>
+        <input type="date" id="dueDate" name="dueDate">
+      </div>
+
+      <div class="form-group">
+        <label for="taskFile">Прикрепить файл:</label>
+        <input type="file" id="taskFile" name="taskFile">
+      </div>
+
+      <button type="submit" class="btn-create">
+        <svg class="icon" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Добавить задачу
+      </button>
+    </form>
+  </div>
+
+  <div class="card">
+    <form action="/" method="GET" class="filter-bar">
+      <label for="statusFilter">Фильтр по статусу:</label>
+      <select name="status" id="statusFilter" onchange="this.form.submit()">
+        <option value="all" <%= currentFilter === 'all' ? 'selected' : '' %>>Все задачи</option>
+        <option value="pending" <%= currentFilter === 'pending' ? 'selected' : '' %>>В процессе</option>
+        <option value="completed" <%= currentFilter === 'completed' ? 'selected' : '' %>>Завершенные</option>
+      </select>
+      <noscript>
+        <button type="submit">Применить</button>
+      </noscript>
+    </form>
+
+    <h2>Список задач</h2>
+    <% if (tasks.length === 0) { %>
+      <p style="text-align: center; color: #777;">Задач в данной категории нет.</p>
+    <% } else { %>
+      <div>
+        <% tasks.forEach(task => { %>
+          <div class="task-item">
+            <div class="task-details">
+              <span class="task-title <%= task.status === 'completed' ? 'completed' : '' %>">
+                <%= task.title %>
+              </span>
+              
+              <div class="task-meta">
+                <span>Статус: </span>
+                <% if (task.status === 'completed') { %>
+                  <span class="status-badge status-completed">Выполнено</span>
+                <% } else { %>
+                  <span class="status-badge status-pending">В процессе</span>
+                <% } %>
+                
+                <% if (task.dueDate) { %>
+                  <span> | Дедлайн: <%= task.dueDate %></span>
+                <% } %>
+              </div>
+
+              <% if (task.file) { %>
+                <div>
+                  <a class="file-link" href="/uploads/<%= task.file.fileName %>" download="<%= task.file.originalName %>">
+                    <svg class="icon" viewBox="0 0 24 24">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                    </svg>
+                    <span><%= task.file.originalName %></span>
+                  </a>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="task-actions">
+              <form action="/tasks/<%= task.id %>/toggle" method="POST">
+                <button type="submit" class="btn-toggle">
+                  <% if (task.status === 'pending') { %>
+                    <svg class="icon" viewBox="0 0 24 24">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Выполнить
+                  <% } else { %>
+                    <svg class="icon" viewBox="0 0 24 24">
+                      <polyline points="1 4 1 10 7 10"></polyline>
+                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Вернуть
+                  <% } %>
+                </button>
+              </form>
+
+              <form action="/tasks/<%= task.id %>/delete" method="POST">
+                <button type="submit" class="btn-delete">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  Удалить
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+</body>
+</html>
