@@ -1,12 +1,14 @@
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const http = require('http');
-const { app, pool } = require('../server');
+const { app, pool, dbInitPromise } = require('../server');
 
 let server;
 let baseUrl;
 
 before(async () => {
+  await dbInitPromise;
+
   await new Promise(resolve => {
     server = http.createServer(app).listen(0, () => {
       baseUrl = `http://localhost:${server.address().port}`;
