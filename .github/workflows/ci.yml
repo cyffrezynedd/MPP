@@ -2,12 +2,12 @@ name: pipeline CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "ch2" ]
     paths:
       - "Lab3/**"
       - ".github/workflows/ci.yml"
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "ch2" ]
     paths:
       - "Lab3/**"
       - ".github/workflows/ci.yml"
