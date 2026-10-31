@@ -129,7 +129,8 @@ async function initDB() {
     }
   }
 }
-initDB();
+
+const dbInitPromise = initDB();
 
 app.use((req, res, next) => {
   req.id = crypto.randomUUID();
@@ -700,4 +701,4 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-module.exports = { app, pool, hashPassword, verifyPassword };
+module.exports = { app, pool, hashPassword, verifyPassword, initDB, dbInitPromise };
