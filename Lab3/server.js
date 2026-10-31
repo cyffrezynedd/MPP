@@ -8,6 +8,7 @@ const logger = require('./logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'secret-jwt-key-task-manager-2026';
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -34,6 +35,70 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'taskdb'
 });
+
+function base64UrlEncode(str) {
+  return Buffer.from(str)
+    .toString('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
+function base64UrlDecode(str) {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) {
+    base64 += '=';
+  }
+  return Buffer.from(base64, 'base64').toString('utf8');
+}
+
+function createJwt(payload, expiresInSeconds = 7200) {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
+  const fullPayload = { ...payload, exp, iat: Math.floor(Date.now() / 1000) };
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(fullPayload));
+
+  const signature = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${encodedHeader}.${encodedPayload}`)
+    .digest('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
+function verifyJwt(token) {
+  if (!token || typeof token !== 'string') return null;
+
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const [encodedHeader, encodedPayload, signature] = parts;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', JWT_SECRET)
+    .update(`${encodedHeader}.${encodedPayload}`)
+    .digest('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+
+  if (signature !== expectedSignature) return null;
+
+  try {
+    const payload = JSON.parse(base64UrlDecode(encodedPayload));
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   const hash = crypto.scryptSync(password, salt, 64).toString('hex');
@@ -65,7 +130,7 @@ async function initDB() {
         CREATE TABLE IF NOT EXISTS sessions (
           id SERIAL PRIMARY KEY,
           user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          token VARCHAR(128) UNIQUE NOT NULL,
+          token TEXT UNIQUE NOT NULL,
           ip VARCHAR(64),
           user_agent TEXT,
           expires_at TIMESTAMP NOT NULL,
@@ -199,20 +264,29 @@ async function authenticateToken(req, res, next) {
     });
   }
 
+  const jwtPayload = verifyJwt(token);
+  if (!jwtPayload) {
+    return res.status(401).json({
+      status: 401,
+      error: 'Unauthorized',
+      message: 'Недействительный или просроченный токен'
+    });
+  }
+
   try {
     const query = `
-      SELECT s.id as session_id, s.token, s.expires_at, u.id as user_id, u.email, u.role
+      SELECT s.id as session_id, s.expires_at, u.id as user_id, u.email, u.role
       FROM sessions s
       JOIN users u ON s.user_id = u.id
-      WHERE s.token = $1;
+      WHERE s.id = $1;
     `;
-    const result = await pool.query(query, [token]);
+    const result = await pool.query(query, [jwtPayload.sessionId]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({
         status: 401,
         error: 'Unauthorized',
-        message: 'Недействительный токен сессии'
+        message: 'Сессия отозвана или не найдена'
       });
     }
 
@@ -231,7 +305,7 @@ async function authenticateToken(req, res, next) {
       email: session.email,
       role: session.role,
       sessionId: session.session_id,
-      token: session.token
+      token
     };
     next();
   } catch (err) {
@@ -356,15 +430,25 @@ app.post('/api/auth/login', async (req, res) => {
     const user = userRes.rows[0];
     await clearLoginAttempts(identifier);
 
-    const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
     const userAgent = req.headers['user-agent'] || 'Unknown';
 
-    await pool.query(
+    const sessionRes = await pool.query(
       `INSERT INTO sessions (user_id, token, ip, user_agent, expires_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [user.id, token, clientIp, userAgent, expiresAt]
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [user.id, 'temporary_placeholder', clientIp, userAgent, expiresAt]
     );
+
+    const sessionId = sessionRes.rows[0].id;
+
+    const token = createJwt({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      sessionId
+    }, 2 * 60 * 60);
+
+    await pool.query('UPDATE sessions SET token = $1 WHERE id = $2', [token, sessionId]);
 
     logger.security('Успешный вход пользователя', { userId: user.id, email: user.email, role: user.role, ip: clientIp });
 
@@ -701,4 +785,4 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-module.exports = { app, pool, hashPassword, verifyPassword, initDB, dbInitPromise };
+module.exports = { app, pool, hashPassword, verifyPassword, initDB, dbInitPromise, createJwt, verifyJwt };
