@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab2</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <header class="app-header">
+      <h1>Менеджер задач</h1>
+      <div id="authBar" class="auth-bar"></div>
+    </header>
+
+    <div id="alertNotification" class="alert hidden"></div>
+
+    <div id="authCard" class="card">
+      <div class="auth-tabs">
+        <button id="tabLogin" class="tab-btn active" onclick="switchAuthTab('login')">Вход</button>
+        <button id="tabRegister" class="tab-btn" onclick="switchAuthTab('register')">Регистрация</button>
+        <button id="tabForgot" class="tab-btn" onclick="switchAuthTab('forgot')">Восстановление пароля</button>
+      </div>
+
+      <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required placeholder="admin@tasks.local">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Пароль</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary">Войти в систему</button>
+        <div class="demo-hints">
+          <small>Тестовые аккаунты, пароль Admin123!, Editor123!, Viewer123!:</small>
+          <div><code>admin@tasks.local</code> — Администратор</div>
+          <div><code>editor@tasks.local</code> — Редактор</div>
+          <div><code>viewer@tasks.local</code> — Наблюдатель</div>
+        </div>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" required placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Пароль: мин. 6 символов</label>
+          <input type="password" id="regPassword" required minlength="6" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label for="regRole">Назначаемая роль</label>
+          <select id="regRole">
+            <option value="viewer">Наблюдатель</option>
+            <option value="editor">Редактор</option>
+            <option value="admin">Администратор</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+      </form>
+
+      <form id="forgotForm" class="auth-form hidden" onsubmit="handleForgotPassword(event)">
+        <div class="form-group">
+          <label for="forgotEmail">Укажите ваш email</label>
+          <input type="email" id="forgotEmail" required placeholder="user@example.com">
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить токен восстановления</button>
+      </form>
+
+      <form id="resetForm" class="auth-form hidden" onsubmit="handleResetPassword(event)">
+        <h3>Установка нового пароля</h3>
+        <div class="form-group">
+          <label for="resetTokenInput">Токен сброса</label>
+          <input type="text" id="resetTokenInput" required placeholder="Введите полученный токен">
+        </div>
+        <div class="form-group">
+          <label for="newPasswordInput">Новый пароль</label>
+          <input type="password" id="newPasswordInput" required minlength="6" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить новый пароль</button>
+      </form>
+    </div>
+
+    <div id="appWorkspace" class="hidden">
+      <div id="sessionsCard" class="card hidden">
+        <div class="list-controls">
+          <h2>Активные подключения</h2>
+          <div class="session-actions">
+            <button class="btn btn-secondary" onclick="logoutAllOthers()">Завершить все остальные</button>
+            <button class="btn btn-delete" onclick="toggleSessionsPanel(false)">Закрыть</button>
+          </div>
+        </div>
+        <div id="sessionsList" class="sessions-container"></div>
+      </div>
+
+      <div id="taskFormCard" class="card">
+        <h2 id="formHeader">Новая задача</h2>
+        <form id="taskForm">
+          <input type="hidden" id="taskId">
+
+          <div class="form-group">
+            <label for="title">Название задачи *</label>
+            <input type="text" id="title" required placeholder="Введите название">
+          </div>
+
+          <div class="form-group">
+            <label for="description">Описание</label>
+            <textarea id="description" rows="3" placeholder="Подробное описание"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="status">Статус</label>
+              <select id="status">
+                <option value="pending">Ожидает</option>
+                <option value="in_progress">В работе</option>
+                <option value="completed">Завершено</option>
+              </select>
+            </div>
+
+            <div class="form-group flex-1">
+              <label for="dueDate">Срок сдачи</label>
+              <input type="date" id="dueDate">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="taskFile">Прикрепить файл</label>
+            <input type="file" id="taskFile">
+            <span id="currentFileNotice" class="file-notice hidden"></span>
+          </div>
+
+          <div class="form-buttons">
+            <button type="submit" id="saveButton" class="btn btn-primary">Сохранить</button>
+            <button type="button" id="cancelButton" class="btn btn-secondary hidden">Отмена</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="list-controls">
+          <h2>Список задач</h2>
+          <div class="filter-group">
+            <label for="filterStatus">Фильтр:</label>
+            <select id="filterStatus">
+              <option value="all">Все статусы</option>
+              <option value="pending">Ожидает</option>
+              <option value="in_progress">В работе</option>
+              <option value="completed">Завершено</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="tasksList" class="tasks-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
