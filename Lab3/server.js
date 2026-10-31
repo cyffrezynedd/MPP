@@ -130,12 +130,42 @@ async function initDB() {
         CREATE TABLE IF NOT EXISTS sessions (
           id SERIAL PRIMARY KEY,
           user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          token TEXT UNIQUE NOT NULL,
+          token TEXT NOT NULL,
           ip VARCHAR(64),
           user_agent TEXT,
           expires_at TIMESTAMP NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+      `);
+
+      await pool.query(`
+        DO $$
+        DECLARE
+          r RECORD;
+        BEGIN
+          -- Расширяем token до TEXT
+          BEGIN
+            ALTER TABLE sessions ALTER COLUMN token TYPE TEXT;
+          EXCEPTION WHEN OTHERS THEN NULL;
+          END;
+
+          FOR r IN (
+            SELECT conname FROM pg_constraint 
+            WHERE conrelid = 'sessions'::regclass AND contype = 'u'
+          ) LOOP
+            EXECUTE 'ALTER TABLE sessions DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname) || ' CASCADE';
+          END LOOP;
+
+          FOR r IN (
+            SELECT indexname FROM pg_indexes 
+            WHERE tablename = 'sessions' AND indexname NOT LIKE '%pkey%'
+          ) LOOP
+            BEGIN
+              EXECUTE 'DROP INDEX IF EXISTS ' || quote_ident(r.indexname) || ' CASCADE';
+            EXCEPTION WHEN OTHERS THEN NULL;
+            END;
+          END LOOP;
+        END $$;
       `);
 
       await pool.query(`
@@ -395,6 +425,8 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
+  await dbInitPromise;
+  
   const { email, password } = req.body;
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
@@ -433,27 +465,29 @@ app.post('/api/auth/login', async (req, res) => {
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
     const userAgent = req.headers['user-agent'] || 'Unknown';
 
+    const tempToken = crypto.randomUUID();
     const sessionRes = await pool.query(
-      `INSERT INTO sessions (user_id, token, ip, user_agent, expires_at)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [user.id, 'temporary_placeholder', clientIp, userAgent, expiresAt]
+      `INSERT INTO sessions (user_id, token, ip, user_agent, expires_at) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING id`, 
+      [user.id, tempToken, clientIp, userAgent, expiresAt] 
     );
 
     const sessionId = sessionRes.rows[0].id;
 
-    const token = createJwt({
+    const finalJwtToken = createJwt({
       userId: user.id,
       email: user.email,
       role: user.role,
       sessionId
     }, 2 * 60 * 60);
 
-    await pool.query('UPDATE sessions SET token = $1 WHERE id = $2', [token, sessionId]);
+    await pool.query('UPDATE sessions SET token = $1 WHERE id = $2', [finalJwtToken, sessionId]);
 
     logger.security('Успешный вход пользователя', { userId: user.id, email: user.email, role: user.role, ip: clientIp });
 
     return res.status(200).json({
-      token,
+      token: finalJwtToken,
       expiresAt: expiresAt.toISOString(),
       user: {
         id: user.id,
