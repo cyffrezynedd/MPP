@@ -81,21 +81,6 @@ body {
   border-bottom-color: #0d6efd;
 }
 
-.demo-hints {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 5px;
-  font-size: 0.82rem;
-  color: #495057;
-}
-
-.demo-hints code {
-  background: #e9ecef;
-  padding: 2px 4px;
-  border-radius: 3px;
-}
-
 .form-group {
   margin-bottom: 15px;
   display: flex;

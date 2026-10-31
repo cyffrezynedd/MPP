@@ -298,7 +298,7 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ status: 400, error: 'Bad Request', message: 'Длина пароля должна быть не менее 6 символов' });
   }
 
-  const assignedRole = ['admin', 'editor', 'viewer'].includes(role) ? role : 'viewer';
+  const assignedRole = role === 'editor' ? 'editor' : 'viewer';
 
   try {
     const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);

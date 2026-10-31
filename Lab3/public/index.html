@@ -26,19 +26,13 @@
       <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
         <div class="form-group">
           <label for="loginEmail">Email</label>
-          <input type="email" id="loginEmail" required placeholder="admin@tasks.local">
+          <input type="email" id="loginEmail" required placeholder="name@example.com">
         </div>
         <div class="form-group">
           <label for="loginPassword">Пароль</label>
           <input type="password" id="loginPassword" required placeholder="••••••••">
         </div>
         <button type="submit" class="btn btn-primary">Войти в систему</button>
-        <div class="demo-hints">
-          <small>Тестовые аккаунты, пароль Admin123!, Editor123!, Viewer123!:</small>
-          <div><code>admin@tasks.local</code> — Администратор</div>
-          <div><code>editor@tasks.local</code> — Редактор</div>
-          <div><code>viewer@tasks.local</code> — Наблюдатель</div>
-        </div>
       </form>
 
       <form id="registerForm" class="auth-form hidden" onsubmit="handleRegister(event)">
@@ -55,7 +49,6 @@
           <select id="regRole">
             <option value="viewer">Наблюдатель</option>
             <option value="editor">Редактор</option>
-            <option value="admin">Администратор</option>
           </select>
         </div>
         <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
